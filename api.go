@@ -35,7 +35,7 @@ func (api *API) Call(mwsRequest MWSRequest) (string, error) {
 	if mwsRequest.Method() == http.MethodPost {
 		r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	}
-	fmt.Println(api.client)
+
 	res, err := api.client.Do(r)
 	if err != nil {
 		return "", errors.Wrap(err, fmt.Sprintf("%s request to %s failed", mwsRequest.Method(), url))
@@ -57,6 +57,6 @@ func NewAPI(credentials Credentials, marketplaceID string) *API {
 		credentials:   credentials,
 		marketplaceID: marketplaceID,
 		host:          "mws.amazonservices.com",
-		// client:        &http.Client{},
+		client:        &http.Client{},
 	}
 }

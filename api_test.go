@@ -30,7 +30,11 @@ func TestAPI(t *testing.T) {
 		api := NewAPI(credientials, "fake-marketplace-id")
 
 		if api.host != "mws.amazonservices.com" {
-			t.Errorf("Expected api host to be %s, but got %v", "mws.amazonservices.com", api.host)
+			t.Errorf("expected api host to be %s, but got %v", "mws.amazonservices.com", api.host)
+		}
+
+		if api.client == nil {
+			t.Error("client should have been initialized")
 		}
 	})
 
