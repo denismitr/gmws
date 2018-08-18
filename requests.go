@@ -1,10 +1,14 @@
 package gmws
 
-import "io"
-
-// Request to Amazon MWS
+// MWSRequest - request to Amazon MWS API
 type MWSRequest interface {
-	GenerateURL(host string) (string, error)
-	Method() string
-	Body() io.Reader
+	GetParams() *RequestParams
+}
+
+// RequestParams - all parameters of particular request
+type RequestParams struct {
+	QueryParams map[string]string
+	Action      string
+	ActionPath  string
+	Method      string
 }

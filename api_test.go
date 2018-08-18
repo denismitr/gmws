@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -26,14 +27,18 @@ func NewTestClient(fn RoundTripFunc) *http.Client {
 func TestAPI(t *testing.T) {
 	credientials := NewCredentials("fake-access-key", "fake-secret-key", "fake-auth-token", "fake-seller-id")
 
-	t.Run("api creation", func(t *testing.T) {
+	t.Run("it initializes API correctly", func(t *testing.T) {
 		api := NewAPI(credientials, "fake-marketplace-id")
 
-		if api.host != "mws.amazonservices.com" {
-			t.Errorf("expected api host to be %s, but got %v", "mws.amazonservices.com", api.host)
+		if api.Host != "mws.amazonservices.com" {
+			t.Errorf("expected api host to be %s, but got %v", "mws.amazonservices.com", api.Host)
 		}
 
-		if api.client == nil {
+		if api.Scheme != "https" {
+			t.Errorf("expected api scheme to be %s, but got %v", "https", api.Host)
+		}
+
+		if api.Client == nil {
 			t.Error("client should have been initialized")
 		}
 	})
@@ -43,7 +48,14 @@ func TestAPI(t *testing.T) {
 
 		client := NewTestClient(func(req *http.Request) *http.Response {
 			// Test request parameters
-			assertEquals(t, req.URL.String(), "https://mws.amazonservices.com/some/path")
+			if !strings.HasPrefix(req.URL.String(), "https://mws.amazonservices.com/fake/get/request?") {
+				t.Errorf("url is incorrect: %s", req.URL.String())
+			}
+
+			if !strings.Contains(req.URL.String(), "fake-key=fake-value") {
+				t.Errorf("url %s does not contain param: %s", req.URL.String(), "fake-key=fake-value")
+			}
+
 			return &http.Response{
 				StatusCode: 200,
 				// Send response to be tested
@@ -53,9 +65,14 @@ func TestAPI(t *testing.T) {
 			}
 		})
 
-		api.SetClient(client)
+		api.Client = client
 
-		fr := &fakeGetRequest{url: "/some/path", httpMethod: http.MethodGet}
+		fr := &fakeGetRequest{
+			Method:      http.MethodGet,
+			Action:      "FakeGetRequest",
+			ActionPath:  "/fake/get/request",
+			QueryParams: map[string]string{"fake-key": "fake-value"},
+		}
 
 		response, err := api.Call(fr)
 
